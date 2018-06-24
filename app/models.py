@@ -24,5 +24,5 @@ class Entry(models.Model):
     debit = models.ForeignKey(Account, related_name='debit_account', on_delete=models.PROTECT)
     credit = models.ForeignKey(Account, related_name='credit_account', on_delete=models.PROTECT)
     description = models.CharField(max_length=256)
-    amount = models.DecimalField(max_digits=19, decimal_places=10)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField()
