@@ -5,4 +5,4 @@ RUN pip install djangorestframework
 
 WORKDIR app
 
-CMD python manage.py runserver 2>&1
+CMD python manage.py runserver 0.0.0.0:8000 2>&1
