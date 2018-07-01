@@ -1,8 +1,14 @@
 from django.urls import path
+from django.conf.urls import url, include
+from rest_framework.routers import DefaultRouter
 
 from . import views
 
+router = DefaultRouter()
+router.register(r'accounts', views.AccountViewSet)
+router.register(r'entries', views.EntryViewSet)
+
+
 urlpatterns = [
-    path('accounts/', views.AccountList.as_view()),
-    path('entries/', views.EntryList.as_view())
+    path('', include(router.urls))
 ]
