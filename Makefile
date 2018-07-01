@@ -4,3 +4,5 @@ run:
 	docker run -d --network host --name perfi -v $(CURDIR):/app gomtopia/perfi:1.0
 stop:
 	docker stop perfi; docker rm perfi
+bash:
+	docker exec -it perfi /bin/bash
