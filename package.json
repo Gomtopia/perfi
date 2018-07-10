@@ -1,0 +1,39 @@
+{
+  "name": "perfi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webpack.config.js",
+  "scripts": {
+    "dev": "webpack --watch --mode development ./web/src/index.js --output ./web/static/web/main.js",
+    "build": "webpack --mode production ./web/src/index.js --output ./web/static/web/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gomtopia/perfi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gomtopia/perfi/issues"
+  },
+  "homepage": "https://github.com/Gomtopia/perfi#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-loader": "^7.1.5",
+    "babel-preset-react-app": "^3.1.2",
+    "bootstrap": "^4.1.1",
+    "css-loader": "^1.0.0",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.3",
+    "prop-types": "^15.6.2",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "style-loader": "^0.21.0",
+    "webpack": "^4.15.1",
+    "webpack-cli": "^3.0.8"
+  },
+  "dependencies": {
+    "package.json": "^2.0.1"
+  }
+}
