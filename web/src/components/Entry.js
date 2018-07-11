@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class Account extends React.Component {
+class Entry extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -10,7 +10,7 @@ class Account extends React.Component {
     }
 
     componentDidMount() {
-        fetch('api/accounts/')
+        fetch('api/entries/')
             .then(response => response.json())
             .then(responseJson => this.setState({response: responseJson}))
             .catch((error) => {
@@ -23,17 +23,23 @@ class Account extends React.Component {
 
         if (response.length > 0) {
             var listelems = response.map(function(d){
-                return (<tr key={d.name + '_row'}>
-                        <td key={d.name}>{d.name}</td>
-                        <td key={d.name + '_' + d.account_type}>{d.account_type}</td>
+                return (<tr key={d.date + '_row'}>
+                        <td key={d.date}>{d.date}</td>
+                        <td key={d.description}>{d.description}</td>
+                        <td key={d.debit}>{d.debit}</td>
+                        <td key={d.credit}>{d.credit}</td>
+                        <td key={d.amount}>{d.amount}</td>
                         </tr>);
             })
 
             return (<table className='table'>
                     <thead className='thead-bordered'>
                     <tr key="header">
-                    <th scope='col' key='name'>Name</th>
-                    <th scope='col' key='type'>Type</th>
+                    <th scope='col' key='date'>Date</th>
+                    <th scope='col' key='desc'>Description</th>
+                    <th scope='col' key='debit'>Debit</th>
+                    <th scope='col' key='credit'>Credit</th>
+                    <th scope='col' key='amount'>Amount</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -46,7 +52,7 @@ class Account extends React.Component {
     }
 }
 
-const account = document.getElementById('account')
-if (account) {
-    ReactDOM.render(<Account />, account);
+const entry = document.getElementById('entry')
+if (entry) {
+    ReactDOM.render(<Entry />, entry);
 }
