@@ -10,5 +10,6 @@ router.register(r'entries', views.EntryViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
+    path('entries/drafts', views.DraftEntryView.as_view()),
 ]
