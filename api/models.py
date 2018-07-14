@@ -24,4 +24,4 @@ class Entry(models.Model):
     credit = models.ForeignKey(Account, related_name='credit_account', on_delete=models.PROTECT)
     description = models.CharField(max_length=256)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateTimeField()
+    date = models.DateField()

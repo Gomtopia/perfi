@@ -1,38 +1,53 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class EntryList extends React.Component {
+class Entry extends React.Component {
     render() {
-        const data = this.props.jsonData;
-        if (data.length > 0) {
-            var listelems = data.map(function(d){
-                return (<tr key={d.date + '_row'}>
-                        <td key={d.date}>{d.date}</td>
-                        <td key={d.description}>{d.description}</td>
-                        <td key={d.debit + '_debit'}>{d.debit}</td>
-                        <td key={d.credit + '_credit'}>{d.credit}</td>
-                        <td key={d.amount}>{d.amount}</td>
-                        </tr>);
-            })
+        const entry = this.props.entry;
+        return (
+            <tr>
+                <td key='date'>{entry.date}</td>
+                <td key='desc'>{entry.description}</td>
+                <td key='debit'>{entry.debit}</td>
+                <td key='credit'>{entry.credit}</td>
+                <td key='amount'>{entry.amount}</td>
+            </tr>
+        );
+    }
+}
 
-            return (<table className='table mt-3'>
-                    <thead className='thead-bordered'>
-                    <tr key="header">
+class EntryListHeader extends React.Component {
+    render() {
+        return (
+            <thead className='thead-bordered'>
+                <tr key="header">
                     <th scope='col' key='date'>Date</th>
                     <th scope='col' key='desc'>Description</th>
                     <th scope='col' key='debit'>Debit</th>
                     <th scope='col' key='credit'>Credit</th>
                     <th scope='col' key='amount'>Amount</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {listelems}
-                    </tbody>
-                    </table>);
-        } else {
+                </tr>
+            </thead>
+        );
+    }
+}
+
+class EntryList extends React.Component {
+    render() {
+        const entries = this.props.entries;
+        if (entries.length == 0) {
             return <div>there is no data</div>;
         }
 
+        var body = entries.map((entry) => <Entry key={entry.id} entry={entry} />)
+        return (
+                <table className='table mt-3'>
+                    <EntryListHeader />
+                    <tbody>
+                        {body}
+                    </tbody>
+                </table>
+        );
     }
 }
 
@@ -45,10 +60,25 @@ class AddEntry extends React.Component {
             debit: undefined,
             credit: undefined,
             amount: 0,
+            accountOptions: [],
         }
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    componentDidMount() {
+        fetch('api/accounts/')
+            .then(response => response.json())
+            .then(responseJson => {
+                let options = responseJson.map(function(d){
+                    return <option key={d.name}>{d.name}</option>
+                });
+                this.setState({accountOptions: options})
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 
     getInputField(inputType, id, label) {
@@ -65,7 +95,7 @@ class AddEntry extends React.Component {
                 <label htmlFor='debit'>Debit</label>
                 <select id="debit" className="form-control" name={id} onChange={this.handleChange} required>
                 <option value="">Choose...</option>
-                {this.props.accountOptions}
+                {this.state.accountOptions}
                 </select>
                 </div>
                );
@@ -88,14 +118,14 @@ class AddEntry extends React.Component {
             },
             body: JSON.stringify(input),
         })
-            .then(response => this.props.handleSubmit())
+            .then(response => this.props.fetchEntries())
             .catch((error) => {
                 console.error(error);
             });
     }
 
     render() {
-        const dateField = this.getInputField('datetime-local', 'date', 'Date');
+        const dateField = this.getInputField('date', 'date', 'Date');
         const descField = this.getInputField('text', 'description', 'Description');
         const debitField = this.getAccountSelectField('debit', 'Debit');
         const creditField = this.getAccountSelectField('credit', 'Credit');
@@ -103,57 +133,44 @@ class AddEntry extends React.Component {
 
         return (
                 <form className='form' onSubmit={this.handleSubmit}>
-                <div className='form-row'>
-                {dateField}{descField}{debitField}{creditField}{amountField}
-                </div>
-                <div className='text-center'>
-                <button type='submit' className='btn btn-primary'>Add</button>
-                </div>
-
+                    <div className='form-row'>
+                        {dateField}{descField}{debitField}{creditField}{amountField}
+                    </div>
+                    <div className='text-center'>
+                        <button type='submit' className='btn btn-primary'>Add</button>
+                    </div>
                 </form>
         );
     }
 }
 
-class Entry extends React.Component {
+class RootComponent extends React.Component {
     constructor(props) {
         super(props);
+        this.fetchEntries = this.fetchEntries.bind(this);
         this.state = {
-            entryJsonData: [],
-            accountOptions: [],
+            entries: [],
         }
     }
 
     componentDidMount() {
-        this.updateEntryList();
-        fetch('api/accounts/')
-            .then(response => response.json())
-            .then(responseJson => {
-                let options = responseJson.map(function(d){
-                    return <option key={d.name}>{d.name}</option>
-                });
-                this.setState({accountOptions: options})
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+        this.fetchEntries();
     }
 
-    updateEntryList() {
+    fetchEntries() {
         fetch('api/entries/')
             .then(response => response.json())
-            .then(responseJson => this.setState({entryJsonData: responseJson}))
+            .then(responseJson => this.setState({entries: responseJson}))
             .catch((error) => {
                 console.error(error);
             })
     }
 
     render() {
-        const response = this.state.entryJsonData;
         return (
             <div>
-                <AddEntry accountOptions={this.state.accountOptions} handleSubmit={() => this.updateEntryList()}/>
-                <EntryList jsonData={response} />
+                <AddEntry fetchEntries={this.fetchEntries} />
+                <EntryList entries={this.state.entries} />
             </div>
         );
     }
@@ -161,5 +178,7 @@ class Entry extends React.Component {
 
 const entry = document.getElementById('entry')
 if (entry) {
-    ReactDOM.render(<Entry />, entry);
+    ReactDOM.render(
+        <RootComponent />,
+        entry);
 }
