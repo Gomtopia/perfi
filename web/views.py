@@ -6,3 +6,6 @@ def account(request):
 
 def entry(request):
     return render(request, 'web/entry.html')
+
+def import_entries(request):
+    return render(request, 'web/import_entries.html')

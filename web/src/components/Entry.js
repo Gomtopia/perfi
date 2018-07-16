@@ -16,7 +16,53 @@ class Entry extends React.Component {
     }
 }
 
-class EntryListHeader extends React.Component {
+export class EditableEntry extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            id: this.props.entry.id,
+            date: this.props.entry.date,
+            description: this.props.entry.description,
+            debit: undefined,
+            credit: undefined,
+            amount: this.props.entry.amount
+        }
+
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(e) {
+        this.setState({[e.target.name]: e.target.value},
+                      () => this.props.handleChange(this.state));
+    }
+
+    render() {
+        const {date, description, amount} = this.state;
+        const accountOptions = this.props.accounts.map((account) => <option key={account.name}>{account.name}</option>);
+
+        return (
+            <tr>
+                <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.handleChange} required/></td>
+                <td key="desc"><input type='text' className='form-control' name='description' defaultValue={description} onChange={this.handleChange} required/></td>
+                <td key="debit">
+                    <select className='form-control' name='debit' onChange={this.handleChange} required>
+                        <option value=''>Choose...</option>
+                        {accountOptions}
+                    </select>
+                </td>
+                <td key="credit">
+                    <select className='form-control' name='credit' onChange={this.handleChange} required>
+                        <option value=''>Choose...</option>
+                        {accountOptions}
+                    </select>
+                </td>
+                <td key="amount"><input type='number' className='form-control' name='amount' defaultValue={amount} onChange={this.handleChange} required/></td>
+            </tr>
+        );
+    }
+}
+
+export class EntryListHeader extends React.Component {
     render() {
         return (
             <thead className='thead-bordered'>

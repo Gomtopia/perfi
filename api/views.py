@@ -21,7 +21,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
 
 class DraftEntryView(APIView):
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         if 'file' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         sfcu_data = request.data['file'].open('r').read().decode('utf-8')
