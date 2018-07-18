@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-  </head>
-  <body>
-    <div class="container" id="entry" />
+{% extends "web/base.html" %}
 
-    {% load static %}
-    <script src="{% static "web/main.js" %}"></script>
-  </body>
-</html>
+{% block content %}
+<div class="container" id="entry"></div>
+{% endblock %}
