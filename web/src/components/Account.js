@@ -13,9 +13,7 @@ class Account extends React.Component {
         fetch('api/accounts/')
             .then(response => response.json())
             .then(responseJson => this.setState({response: responseJson}))
-            .catch((error) => {
-                console.error(error);
-            })
+            .catch((error) => console.error(error))
     }
 
     render() {
@@ -23,23 +21,27 @@ class Account extends React.Component {
 
         if (response.length > 0) {
             var listelems = response.map(function(d){
-                return (<tr key={d.name + '_row'}>
+                return (
+                    <tr key={d.name + '_row'}>
                         <td key={d.name}>{d.name}</td>
-                        <td key={d.name + '_' + d.account_type}>{d.account_type}</td>
-                        </tr>);
+                        <td key={d.account_type}>{d.account_type}</td>
+                    </tr>
+                );
             })
 
-            return (<table className='table'>
+            return (
+                <table className='table'>
                     <thead className='thead-bordered'>
-                    <tr key="header">
-                    <th scope='col' key='name'>Name</th>
-                    <th scope='col' key='type'>Type</th>
-                    </tr>
+                        <tr key="header">
+                            <th scope='col' key='name'>Name</th>
+                            <th scope='col' key='type'>Type</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {listelems}
+                        {listelems}
                     </tbody>
-                    </table>);
+                </table>
+            );
         } else {
             return <div>there is no data</div>;
         }

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {EntryListHeader, EditableEntry} from './Entry.js';
+import {UpdateEntryList} from './Entry.js';
 
 class UploadFile extends React.Component {
 
@@ -42,70 +42,28 @@ class UploadFile extends React.Component {
     }
 }
 
+
 class ImportEntries extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             draftEntries: [],
-            accounts: [],
         }
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleUpdate = this.handleUpdate.bind(this);
     }
 
-    componentDidMount() {
-        fetch('api/accounts/')
-            .then(response => response.json())
-            .then(responseJson => this.setState({accounts: responseJson}))
-            .catch((error) => console.error(error));
-    }
-
-    handleChange(index, updatedEntry) {
+    handleUpdate(entry) {
+        const index = this.state.draftEntries.indexOf(entry);
         const draftEntries = this.state.draftEntries;
-        draftEntries[index] = updatedEntry;
+        draftEntries.splice(index, 1);
         this.setState({draftEntries: draftEntries});
     }
 
-    handleSubmit(e) {
-        e.preventDefault();
-        this.state.draftEntries.map((entry) => {
-            const {date, description, debit, credit, amount} = entry;
-            const input = {date, description, debit, credit, amount};
-            fetch('api/entries/', {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(input),
-            })
-                .then(response => {
-                    const index = this.state.draftEntries.indexOf(entry);
-                    const draftEntries = this.state.draftEntries;
-                    draftEntries.splice(index, 1);
-                    this.setState({draftEntries: draftEntries});
-                })
-                .catch((error) => console.error(error));
-        })
-    }
-
     render() {
-        const body = this.state.draftEntries.map((entry, key) =>
-            <EditableEntry key={entry.id} accounts={this.state.accounts} entry={entry} handleChange={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
-
         return (
             <div>
                 <UploadFile onDraftEntriesChanged={(draftEntries) => this.setState({draftEntries: draftEntries})} />
-                <form onSubmit={this.handleSubmit}>
-                    <table className='table mt-3'>
-                        <EntryListHeader />
-                        <tbody>
-                            {body}
-                        </tbody>
-                    </table>
-                    <div className='text-center'>
-                        <button type='submit' className='btn btn-primary'>Submit</button>
-                    </div>
-                </form>
+                <UpdateEntryList entries={this.state.draftEntries} key={this.state.draftEntries} handleUpdate={this.handleUpdate} />
             </div>);
     }
 }

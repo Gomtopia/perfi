@@ -16,7 +16,7 @@ class Entry extends React.Component {
     }
 }
 
-export class EditableEntry extends React.Component {
+class EditableEntry extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -62,7 +62,7 @@ export class EditableEntry extends React.Component {
     }
 }
 
-export class EntryListHeader extends React.Component {
+class EntryListHeader extends React.Component {
     render() {
         return (
             <thead className='thead-bordered'>
@@ -78,7 +78,7 @@ export class EntryListHeader extends React.Component {
     }
 }
 
-class EntryList extends React.Component {
+class EntryListTable extends React.Component {
     render() {
         const entries = this.props.entries;
         if (entries.length == 0) {
@@ -97,18 +97,13 @@ class EntryList extends React.Component {
     }
 }
 
-class AddEntry extends React.Component {
+export class UpdateEntryList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            date: undefined,
-            description: "",
-            debit: undefined,
-            credit: undefined,
-            amount: 0,
-            accountOptions: [],
+            draftEntries: this.props.entries,
+            accounts: [],
         }
-
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -116,76 +111,57 @@ class AddEntry extends React.Component {
     componentDidMount() {
         fetch('api/accounts/')
             .then(response => response.json())
-            .then(responseJson => {
-                let options = responseJson.map(function(d){
-                    return <option key={d.name}>{d.name}</option>
-                });
-                this.setState({accountOptions: options})
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+            .then(responseJson => this.setState({accounts: responseJson}))
+            .catch((error) => console.error(error));
     }
 
-    getInputField(inputType, id, label) {
-        return (
-                <div className='form-group col-md'>
-                <label htmlFor={id}>{label}</label>
-                <input type={inputType} className='form-control' id={id} name={id} onChange={this.handleChange} required/>
-                </div>
-        );
-    }
-
-    getAccountSelectField(id, label) {
-        return (<div className='form-group col-md'>
-                <label htmlFor='debit'>Debit</label>
-                <select id="debit" className="form-control" name={id} onChange={this.handleChange} required>
-                <option value="">Choose...</option>
-                {this.state.accountOptions}
-                </select>
-                </div>
-               );
-    }
-
-    handleChange(e) {
-        this.setState({[e.target.name]: e.target.value});
+    handleChange(index, updatedEntry) {
+        const draftEntries = this.state.draftEntries;
+        draftEntries[index] = updatedEntry;
+        this.setState({draftEntries: draftEntries});
     }
 
     handleSubmit(e) {
         e.preventDefault();
-
-        const {date, description, debit, credit, amount} = this.state;
-        const input = {date, description, debit, credit, amount};
-        fetch('api/entries/', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(input),
+        this.state.draftEntries.map((entry) => {
+            const {date, description, debit, credit, amount} = entry;
+            const input = {date, description, debit, credit, amount};
+            fetch('api/entries/', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(input),
+            })
+                .then(response => {
+                    this.props.handleUpdate(entry);
+                })
+                .catch((error) => console.error(error));
         })
-            .then(response => this.props.fetchEntries())
-            .catch((error) => {
-                console.error(error);
-            });
     }
 
     render() {
-        const dateField = this.getInputField('date', 'date', 'Date');
-        const descField = this.getInputField('text', 'description', 'Description');
-        const debitField = this.getAccountSelectField('debit', 'Debit');
-        const creditField = this.getAccountSelectField('credit', 'Credit');
-        const amountField = this.getInputField('number', 'amount', 'Amount');
+        const entries = this.state.draftEntries;
+        if (entries.length == 0) {
+            return <div>there is no entries to update</div>;
+        }
+
+        const body = entries.map((entry, key) =>
+            <EditableEntry key={entry.id} entry={entry} accounts={this.state.accounts} handleChange={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
 
         return (
-                <form className='form' onSubmit={this.handleSubmit}>
-                    <div className='form-row'>
-                        {dateField}{descField}{debitField}{creditField}{amountField}
-                    </div>
-                    <div className='text-center'>
-                        <button type='submit' className='btn btn-primary'>Add</button>
-                    </div>
-                </form>
+            <form onSubmit={this.handleSubmit}>
+                <table className='table mt-3'>
+                    <EntryListHeader />
+                    <tbody>
+                        {body}
+                    </tbody>
+                </table>
+                <div className='text-center'>
+                    <button type='submit' className='btn btn-primary'>Submit</button>
+                </div>
+            </form>
         );
     }
 }
@@ -193,10 +169,12 @@ class AddEntry extends React.Component {
 class RootComponent extends React.Component {
     constructor(props) {
         super(props);
-        this.fetchEntries = this.fetchEntries.bind(this);
         this.state = {
             entries: [],
+            emptyEntry: {id: 1}
         }
+
+        this.handleUpdate = this.handleUpdate.bind(this);
     }
 
     componentDidMount() {
@@ -207,16 +185,19 @@ class RootComponent extends React.Component {
         fetch('api/entries/')
             .then(response => response.json())
             .then(responseJson => this.setState({entries: responseJson}))
-            .catch((error) => {
-                console.error(error);
-            })
+            .catch((error) => console.error(error))
+    }
+
+    handleUpdate() {
+        this.fetchEntries();
+        this.state.emptyEntry.id += 1;
     }
 
     render() {
         return (
             <div>
-                <AddEntry fetchEntries={this.fetchEntries} />
-                <EntryList entries={this.state.entries} />
+                <UpdateEntryList entries={[this.state.emptyEntry]} key={this.state.emptyEntry.id} handleUpdate={this.handleUpdate} />
+                <EntryListTable entries={this.state.entries} />
             </div>
         );
     }
