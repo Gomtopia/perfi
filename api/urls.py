@@ -12,4 +12,5 @@ router.register(r'entries', views.EntryViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('entries/drafts', views.DraftEntryView.as_view()),
+    path('statistics', views.StatisticsView.as_view()),
 ]

@@ -34,6 +34,7 @@
     "webpack-cli": "^3.0.8"
   },
   "dependencies": {
-    "package.json": "^2.0.1"
+    "package.json": "^2.0.1",
+    "recharts": "^1.1.0"
   }
 }

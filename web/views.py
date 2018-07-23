@@ -9,3 +9,6 @@ def entry(request):
 
 def import_entries(request):
     return render(request, 'web/import_entries.html')
+
+def statistics(request):
+    return render(request, 'web/statistics.html')

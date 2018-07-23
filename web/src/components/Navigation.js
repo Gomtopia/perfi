@@ -7,6 +7,7 @@ class Navigation extends React.Component {
             <nav className="navbar navbar-expand-sm navbar-light">
                 <a className="navbar-brand" href="#">PERFI</a>
                 <div className="navbar-nav">
+                    <a className="nav-item nav-link" href="statistics">Statistics</a>
                     <a className="nav-item nav-link" href="entry">Bookkeeping</a>
                     <a className="nav-item nav-link" href="import">Import</a>
                     <a className="nav-item nav-link" href="account">Account</a>
