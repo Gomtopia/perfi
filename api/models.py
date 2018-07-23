@@ -1,22 +1,22 @@
 from django.db import models
 
 class Account(models.Model):
-    ASSETS = 'ASSETS'
-    LIABILITIES = 'LIABILITIES'
+    ASSET = 'ASSET'
+    LIABILITY = 'LIABILITY'
     INCOME = 'INCOME'
-    EXPENSES = 'EXPENSES'
+    EXPENSE = 'EXPENSE'
     ACCOUNT_TYPE_CHOICES = (
-        (ASSETS, 'Assets'),
-        (LIABILITIES,'Liabilities'),
+        (ASSET, 'Asset'),
+        (LIABILITY,'Liability'),
         (INCOME, 'Income'),
-        (EXPENSES, 'Expenses'),
+        (EXPENSE, 'Expense'),
     )
 
     name = models.CharField(max_length=128, primary_key=True)
     account_type = models.CharField(
         max_length = 16,
         choices = ACCOUNT_TYPE_CHOICES,
-        default = ASSETS,
+        default = ASSET,
     )
 
 class Entry(models.Model):
