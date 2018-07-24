@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 from django.db.models import F, Sum
@@ -42,7 +42,11 @@ class DraftEntryView(APIView):
                 desc += row['Check']
             debit = float(row['Debit']) if row['Debit'] else 0
             credit = float(row['Credit']) if row['Credit'] else 0
-            entry = Entry(id = cnt, description = desc, amount = abs(credit-debit), date = row['Post Date'])
+            post_date = datetime.strptime(row['Post Date'], '%m/%d/%Y')
+            entry = Entry(id = cnt,
+                          description = desc,
+                          amount = abs(credit-debit),
+                          date = post_date.strftime('%Y-%m-%d'))
             cnt += 1
             draft_entries.append(entry)
         return draft_entries

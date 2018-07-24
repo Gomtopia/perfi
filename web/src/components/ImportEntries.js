@@ -48,8 +48,20 @@ class ImportEntries extends React.Component {
         super(props);
         this.state = {
             draftEntries: [],
+            accounts: [],
         }
         this.handleUpdate = this.handleUpdate.bind(this);
+    }
+
+    componentDidMount() {
+        this.fetchAccounts();
+    }
+
+    fetchAccounts() {
+        fetch('api/accounts/')
+            .then(response => response.json())
+            .then(responseJson => this.setState({accounts: responseJson}))
+            .catch((error) => console.error(error));
     }
 
     handleUpdate(entry) {
@@ -63,7 +75,11 @@ class ImportEntries extends React.Component {
         return (
             <div>
                 <UploadFile onDraftEntriesChanged={(draftEntries) => this.setState({draftEntries: draftEntries})} />
-                <UpdateEntryList entries={this.state.draftEntries} key={this.state.draftEntries} handleUpdate={this.handleUpdate} />
+                <UpdateEntryList
+                    key={this.state.draftEntries}
+                    entries={this.state.draftEntries}
+                    accounts={this.state.accounts}
+                    handleUpdate={this.handleUpdate} />
             </div>);
     }
 }

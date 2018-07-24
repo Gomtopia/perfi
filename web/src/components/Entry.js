@@ -238,7 +238,7 @@ export class UpdateEntryList extends React.Component {
                 key={entry.id}
                 entry={entry}
                 accounts={this.props.accounts}
-                handleChange={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
+                onChanged={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
 
         return (
             <form onSubmit={this.handleSubmit}>
