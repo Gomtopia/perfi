@@ -2,6 +2,84 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 class Entry extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            entry: this.props.entry,
+            isEditing: false,
+        }
+        this.handleChange = this.handleChange.bind(this);
+        this.update = this.update.bind(this);
+        this.remove = this.remove.bind(this);
+    }
+
+    handleChange(updatedEntry) {
+        console.log(updatedEntry);
+        this.setState({entry: updatedEntry});
+    }
+
+    remove() {
+        //TODO: Implement remove
+    }
+
+    update() {
+        this.setState({isEditing: false});
+        fetch('api/entries/' + this.state.entry.id + '/',
+              {
+                  method: 'PUT',
+                  headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(this.state.entry),
+              })
+            .then(response => response.json())
+            .then(responseJson => this.handleChange(responseJson))
+            .catch((error) => console.error(error));
+    }
+
+    render() {
+        const entry = this.state.entry;
+        if (this.state.isEditing) {
+            return (
+                <EditableEntry
+                    key={entry.id}
+                    entry={entry}
+                    accounts={this.props.accounts}
+                    support_actions="true"
+                    onChanged={this.handleChange}
+                    onUpdate={this.update}
+                />
+            );
+        } else {
+            return (
+                <StaticEntry
+                    key={entry.id}
+                    entry={entry}
+                    support_actions="true"
+                    handleEditBtnClick={() => this.setState({isEditing: true})}
+                    handleRemoveBtnClick={this.remove(entry.id)} />
+            );
+        }
+    }
+}
+
+class StaticEntry extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleEditBtnClick = this.handleEditBtnClick.bind(this);
+    }
+
+    handleEditBtnClick(e) {
+        e.preventDefault();
+        this.props.handleEditBtnClick();
+    }
+
+    handleRemoveBtnClick(e) {
+        e.preventDefault();
+        this.props.handleRemoveBtnClick();
+    }
+
     render() {
         const entry = this.props.entry;
         return (
@@ -11,6 +89,12 @@ class Entry extends React.Component {
                 <td key='debit'>{entry.debit}</td>
                 <td key='credit'>{entry.credit}</td>
                 <td key='amount'>{entry.amount}</td>
+                {this.props.support_actions &&
+                 <td key='edit'>
+                     <button type="button" className="btn btn-primary" onClick={this.handleEditBtnClick}>Edit</button>
+                     <button type="button" className="btn btn-danger ml-2" onClick={this.handleRemoveBtnClick}>Remove</button>
+                 </td>
+                }
             </tr>
         );
     }
@@ -23,17 +107,22 @@ class EditableEntry extends React.Component {
             id: this.props.entry.id,
             date: this.props.entry.date,
             description: this.props.entry.description,
-            debit: undefined,
-            credit: undefined,
+            debit: this.props.entry.debit,
+            credit: this.props.entry.credit,
             amount: this.props.entry.amount
         }
 
         this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     handleChange(e) {
         this.setState({[e.target.name]: e.target.value},
-                      () => this.props.handleChange(this.state));
+                      () => this.props.onChanged(this.state));
+    }
+
+    handleSubmit(e) {
+        this.props.onUpdate();
     }
 
     render() {
@@ -42,7 +131,7 @@ class EditableEntry extends React.Component {
 
         return (
             <tr>
-                <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.handleChange} required/></td>
+                <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.onChanged} required/></td>
                 <td key="desc"><input type='text' className='form-control' name='description' defaultValue={description} onChange={this.handleChange} required/></td>
                 <td key="debit">
                     <select className='form-control' name='debit' onChange={this.handleChange} required>
@@ -57,6 +146,10 @@ class EditableEntry extends React.Component {
                     </select>
                 </td>
                 <td key="amount"><input type='number' className='form-control' name='amount' defaultValue={amount} onChange={this.handleChange} required/></td>
+                {this.props.support_actions &&
+                 <td key='edit'>
+                     <button type="button" className="btn btn-danger" onClick={this.handleSubmit}>Update</button>
+                 </td>}
             </tr>
         );
     }
@@ -72,6 +165,7 @@ class EntryListHeader extends React.Component {
                     <th scope='col' key='debit'>Debit</th>
                     <th scope='col' key='credit'>Credit</th>
                     <th scope='col' key='amount'>Amount</th>
+                    {this.props.support_actions && <th scope='col' key='actions'></th>}
                 </tr>
             </thead>
         );
@@ -85,10 +179,10 @@ class EntryListTable extends React.Component {
             return <div>there is no data</div>;
         }
 
-        var body = entries.map((entry) => <Entry key={entry.id} entry={entry} />)
+        var body = entries.map((entry) => <Entry key={entry.id} entry={entry} accounts={this.props.accounts} support_actions="true" />)
         return (
                 <table className='table mt-3'>
-                    <EntryListHeader />
+                    <EntryListHeader support_actions="true" />
                     <tbody>
                         {body}
                     </tbody>
@@ -102,17 +196,9 @@ export class UpdateEntryList extends React.Component {
         super(props);
         this.state = {
             draftEntries: this.props.entries,
-            accounts: [],
         }
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-    }
-
-    componentDidMount() {
-        fetch('api/accounts/')
-            .then(response => response.json())
-            .then(responseJson => this.setState({accounts: responseJson}))
-            .catch((error) => console.error(error));
     }
 
     handleChange(index, updatedEntry) {
@@ -148,7 +234,11 @@ export class UpdateEntryList extends React.Component {
         }
 
         const body = entries.map((entry, key) =>
-            <EditableEntry key={entry.id} entry={entry} accounts={this.state.accounts} handleChange={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
+            <EditableEntry
+                key={entry.id}
+                entry={entry}
+                accounts={this.props.accounts}
+                handleChange={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
 
         return (
             <form onSubmit={this.handleSubmit}>
@@ -171,7 +261,8 @@ class RootComponent extends React.Component {
         super(props);
         this.state = {
             entries: [],
-            emptyEntry: {id: 1}
+            emptyEntry: {id: 1},
+            accounts: [],
         }
 
         this.handleUpdate = this.handleUpdate.bind(this);
@@ -179,6 +270,7 @@ class RootComponent extends React.Component {
 
     componentDidMount() {
         this.fetchEntries();
+        this.fetchAccounts();
     }
 
     fetchEntries() {
@@ -186,6 +278,13 @@ class RootComponent extends React.Component {
             .then(response => response.json())
             .then(responseJson => this.setState({entries: responseJson}))
             .catch((error) => console.error(error))
+    }
+
+    fetchAccounts() {
+        fetch('api/accounts/')
+            .then(response => response.json())
+            .then(responseJson => this.setState({accounts: responseJson}))
+            .catch((error) => console.error(error));
     }
 
     handleUpdate() {
@@ -196,8 +295,14 @@ class RootComponent extends React.Component {
     render() {
         return (
             <div>
-                <UpdateEntryList entries={[this.state.emptyEntry]} key={this.state.emptyEntry.id} handleUpdate={this.handleUpdate} />
-                <EntryListTable entries={this.state.entries} />
+                <UpdateEntryList
+                    key={this.state.emptyEntry.id}
+                    entries={[this.state.emptyEntry]}
+                    accounts={this.state.accounts}
+                    handleUpdate={this.handleUpdate} />
+                <EntryListTable
+                    entries={this.state.entries}
+                    accounts={this.state.accounts} />
             </div>
         );
     }
