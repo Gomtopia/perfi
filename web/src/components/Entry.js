@@ -11,6 +11,7 @@ class Entry extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.update = this.update.bind(this);
         this.remove = this.remove.bind(this);
+        this.onActionTriggered = this.onActionTriggered.bind(this);
     }
 
     handleChange(updatedEntry) {
@@ -52,6 +53,12 @@ class Entry extends React.Component {
             .catch((error) => console.error(error));
     }
 
+    onActionTriggered(action) {
+        if (action == "update") {
+            this.update();
+        }
+    }
+
     render() {
         const entry = this.state.entry;
         if (this.state.isEditing) {
@@ -60,9 +67,9 @@ class Entry extends React.Component {
                     key={entry.id}
                     entry={entry}
                     accounts={this.props.accounts}
-                    support_actions="true"
+                    supported_actions={["update"]}
                     onChanged={this.handleChange}
-                    onUpdate={this.update}
+                    onActionTriggered={this.onActionTriggered}
                 />
             );
         } else {
@@ -115,6 +122,67 @@ class StaticEntry extends React.Component {
     }
 }
 
+class MultipleEditableEntry extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            entries: [{'id': 0}],
+        }
+        this.handleChange = this.handleChange.bind(this);
+        this.onActionTriggered = this.onActionTriggered.bind(this);
+        this.lastId = 0;
+    }
+
+    handleChange(index, updatedEntry) {
+        this.setState((prevState) => {
+            var newEntries = prevState.entries;
+            newEntries[index] = updatedEntry;
+            return {entries: newEntries};
+        });
+    }
+
+    onActionTriggered(index, action) {
+        if (action == "add") {
+            this.setState((prevState) => {
+                this.lastId += 1;
+                var newEntries = prevState.entries;
+                newEntries[prevState.entries.length] = {'id': this.lastId};
+                console.log(newEntries);
+                return {entries: newEntries};
+            });
+        } else if (action == "remove") {
+            this.setState((prevState) => {
+                var newEntries = prevState.entries;
+                newEntries.splice(index,1)
+                return {entries: newEntries};
+            });
+        }
+    }
+
+    render() {
+        const editableEntries = this.state.entries.map((entry, index) => {
+            const isLastEntry = (index == (this.state.entries.length - 1));
+            const supportedActions = [];
+            if (isLastEntry) {
+                supportedActions.push("add");
+            }
+            if (this.state.entries.length != 1) {
+                supportedActions.push("remove");
+            }
+            console.log(this.props.parentKey + ":" + entry.id);
+            return (<EditableEntry
+                        entry={entry}
+                        accounts={this.props.accounts}
+                        nested="true"
+                        supported_actions={supportedActions}
+                        onChanged={(updatedEntry) => this.handleChange(index, updatedEntry)}
+                        onActionTriggered={(action) => this.onActionTriggered(index, action)} />
+            )
+        });
+        return editableEntries;
+    }
+}
+
 class EditableEntry extends React.Component {
     constructor(props) {
         super(props);
@@ -124,11 +192,12 @@ class EditableEntry extends React.Component {
             description: this.props.entry.description,
             debit: this.props.entry.debit,
             credit: this.props.entry.credit,
-            amount: this.props.entry.amount
+            amount: this.props.entry.amount,
+            expanded: false,
         }
 
         this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleExpandBtnClick = this.handleExpandBtnClick.bind(this);
     }
 
     handleChange(e) {
@@ -136,16 +205,37 @@ class EditableEntry extends React.Component {
                       () => this.props.onChanged(this.state));
     }
 
-    handleSubmit(e) {
-        this.props.onUpdate();
+    handleExpandBtnClick(e) {
+        this.setState((prevState, props) => {
+            return {expanded: !(prevState.expanded)}
+        })
     }
 
     render() {
         const {date, description, amount} = this.state;
         const accountOptions = this.props.accounts.map((account) => <option key={account.name}>{account.name}</option>);
-
-        return (
-            <tr>
+        const updateActionSupported = this.props.supported_actions && this.props.supported_actions.indexOf('update') != -1;
+        const addActionSupported = this.props.supported_actions && this.props.supported_actions.indexOf('add') != -1;
+        const removeActionSupported = this.props.supported_actions && this.props.supported_actions.indexOf('remove') != -1;
+        const expandButton = (
+            <button type='button' onClick={this.handleExpandBtnClick}>
+                {this.state.expanded && "-"}
+                {!this.state.expanded && "+"}
+            </button>
+        );
+        const multipleEditableEntry = this.state.expanded && (
+            <MultipleEditableEntry
+                parentKey={this.props.entry.id}
+                accounts={this.props.accounts}  />);
+        return [(
+            <tr key={this.props.entry.id}>
+                {this.props.expandable && (
+                     <td>
+                         {expandButton}
+                     </td>
+                )}
+                {this.props.nested &&
+                 (<td></td>)}
                 <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.handleChange} required/></td>
                 <td key="desc"><input type='text' className='form-control' name='description' defaultValue={description} onChange={this.handleChange} required/></td>
                 <td key="debit">
@@ -161,12 +251,19 @@ class EditableEntry extends React.Component {
                     </select>
                 </td>
                 <td key="amount"><input type='number' className='form-control' name='amount' defaultValue={amount} onChange={this.handleChange} required/></td>
-                {this.props.support_actions &&
+                {this.props.supported_actions &&
                  <td key='edit'>
-                     <button type="button" className="btn btn-danger" onClick={this.handleSubmit}>Update</button>
+                     {updateActionSupported &&
+                      <button type="button" className="btn btn-danger ml-2" onClick={(e) => this.props.onActionTriggered('update')}>Update</button>}
+                     {removeActionSupported &&
+                      <button type="button" className="btn btn-primary ml-2" onClick={(e) => this.props.onActionTriggered('remove')}>-</button>}
+                     {addActionSupported &&
+                      <button type="button" className="btn btn-primary ml-2" onClick={(e) => this.props.onActionTriggered('add')}>+</button>}
                  </td>}
             </tr>
-        );
+        ),
+                this.state.expanded && multipleEditableEntry
+        ];
     }
 }
 
@@ -175,6 +272,7 @@ class EntryListHeader extends React.Component {
         return (
             <thead className='thead-bordered'>
                 <tr key="header">
+                    {this.props.expandable && <th scope='col' key='expand'></th>}
                     <th scope='col' key='date'>Date</th>
                     <th scope='col' key='desc'>Description</th>
                     <th scope='col' key='debit'>Debit</th>
@@ -260,12 +358,14 @@ export class UpdateEntryList extends React.Component {
                 key={entry.id}
                 entry={entry}
                 accounts={this.props.accounts}
+                expandable={this.props.expandable}
                 onChanged={(updatedEntry) => this.handleChange(key, updatedEntry)} />);
 
         return (
             <form onSubmit={this.handleSubmit}>
                 <table className='table mt-3'>
-                    <EntryListHeader />
+                    <EntryListHeader
+                        expandable={this.props.expandable} />
                     <tbody>
                         {body}
                     </tbody>

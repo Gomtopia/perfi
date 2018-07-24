@@ -79,6 +79,7 @@ class ImportEntries extends React.Component {
                     key={this.state.draftEntries}
                     entries={this.state.draftEntries}
                     accounts={this.state.accounts}
+                    expandable="true"
                     handleUpdate={this.handleUpdate} />
             </div>);
     }
