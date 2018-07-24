@@ -19,7 +19,21 @@ class Entry extends React.Component {
     }
 
     remove() {
-        //TODO: Implement remove
+        fetch('api/entries/' + this.state.entry.id + '/',
+              {
+                  method: 'DELETE',
+                  headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(this.state.entry),
+              })
+            .then(response => {
+                console.log(
+                    this.props.onEntryRemoved);
+                this.props.onEntryRemoved();
+            })
+            .catch((error) => console.error(error));
     }
 
     update() {
@@ -58,7 +72,7 @@ class Entry extends React.Component {
                     entry={entry}
                     support_actions="true"
                     handleEditBtnClick={() => this.setState({isEditing: true})}
-                    handleRemoveBtnClick={this.remove(entry.id)} />
+                    handleRemoveBtnClick={() => this.remove(entry.id)} />
             );
         }
     }
@@ -68,6 +82,7 @@ class StaticEntry extends React.Component {
     constructor(props) {
         super(props);
         this.handleEditBtnClick = this.handleEditBtnClick.bind(this);
+        this.handleRemoveBtnClick = this.handleRemoveBtnClick.bind(this);
     }
 
     handleEditBtnClick(e) {
@@ -131,7 +146,7 @@ class EditableEntry extends React.Component {
 
         return (
             <tr>
-                <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.onChanged} required/></td>
+                <td key="date"><input type='date' className='form-control' name='date' defaultValue={date} onChange={this.handleChange} required/></td>
                 <td key="desc"><input type='text' className='form-control' name='description' defaultValue={description} onChange={this.handleChange} required/></td>
                 <td key="debit">
                     <select className='form-control' name='debit' onChange={this.handleChange} required>
@@ -179,14 +194,21 @@ class EntryListTable extends React.Component {
             return <div>there is no data</div>;
         }
 
-        var body = entries.map((entry) => <Entry key={entry.id} entry={entry} accounts={this.props.accounts} support_actions="true" />)
+        var body = entries.map(
+            (entry) =>
+                <Entry
+                    key={entry.id}
+                    entry={entry}
+                    accounts={this.props.accounts}
+                    onEntryRemoved={this.props.handleUpdate}
+                    support_actions="true" />)
         return (
-                <table className='table mt-3'>
-                    <EntryListHeader support_actions="true" />
-                    <tbody>
-                        {body}
-                    </tbody>
-                </table>
+            <table className='table mt-3'>
+                <EntryListHeader support_actions="true" />
+                <tbody>
+                    {body}
+                </tbody>
+            </table>
         );
     }
 }
@@ -302,7 +324,8 @@ class RootComponent extends React.Component {
                     handleUpdate={this.handleUpdate} />
                 <EntryListTable
                     entries={this.state.entries}
-                    accounts={this.state.accounts} />
+                    accounts={this.state.accounts}
+                    handleUpdate={this.handleUpdate} />
             </div>
         );
     }
