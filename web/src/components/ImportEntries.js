@@ -1,91 +1,102 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {UpdateEntryList} from './Entry.js';
+import {Provider, connect} from 'react-redux'
 
-class UploadFile extends React.Component {
+import EntryListHeader from './EntryListHeader';
+import SplittableEntry from './SplittableEntry';
+import UploadFile from './UploadFile';
+import {fetchAccountList} from '../actions/account';
+import {getDraftFromFile} from '../actions/draft';
+import {addEntry} from '../actions/entry';
+import {store} from '../store';
 
-    constructor(props) {
-        super(props);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.input = React.createRef();
-    }
+const UpdateEntryList = ({accounts, entries, addEntry}) => {
+    const totalRefsList = [];
+    const body = Object.keys(entries).map((id) => {
+        const entry = entries[id];
+        let inputRefsList;
+        if (entry.isSpliting) {
+            inputRefsList = [];
+            entry.subEntries.map(() => inputRefsList.push({}));
+        } else {
+            inputRefsList = [{}];
+        }
+        inputRefsList.map((refs) => totalRefsList.push(refs));
 
-    handleSubmit(e) {
-        e.preventDefault();
+        return <SplittableEntry
+                   key={entry.id}
+                   entry={entry}
+                   accounts={accounts}
+                   inputRefsList={inputRefsList} />
+    });
 
-        const file = this.input.current.files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch('api/entries/drafts', {
-            method: 'POST',
-            body: formData,
-        })
-            .then(response => response.json())
-            .then(responseJson => this.props.onDraftEntriesChanged(responseJson))
-            .catch((error) => console.error(error));
-    }
-
-    render() {
-        return (
-            <form onSubmit={this.handleSubmit}>
-                <div className='form-group'>
-                    <label htmlFor='uploadFile' />
-                    <input type='file' className='form-control-file' id='uploadFile' ref={this.input} />
-                </div>
-
-                <div className='text-center'>
-                    <button type='submit' className='btn btn-primary'>Submit</button>
-                </div>
-            </form>
-        );
-    }
+    return (
+        <form onSubmit={(e) => {
+                e.preventDefault();
+                totalRefsList.map((refs) => {
+                    addEntry({
+                        date: refs.date.value,
+                        description: refs.description.value.trim(),
+                        debit: refs.debit.value,
+                        credit: refs.credit.value,
+                        amount: refs.amount.value
+                    })
+                })
+        }}>
+            <table className='table mt-3'>
+                <EntryListHeader />
+                <tbody>
+                    {body}
+                </tbody>
+            </table>
+            <div className='text-center'>
+                <button type='submit' className='btn btn-primary'>Submit</button>
+            </div>
+        </form>
+    );
 }
 
-
 class ImportEntries extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            draftEntries: [],
-            accounts: [],
-        }
-        this.handleUpdate = this.handleUpdate.bind(this);
-    }
-
     componentDidMount() {
-        this.fetchAccounts();
-    }
-
-    fetchAccounts() {
-        fetch('api/accounts/')
-            .then(response => response.json())
-            .then(responseJson => this.setState({accounts: responseJson}))
-            .catch((error) => console.error(error));
-    }
-
-    handleUpdate(entry) {
-        const index = this.state.draftEntries.indexOf(entry);
-        const draftEntries = this.state.draftEntries;
-        draftEntries.splice(index, 1);
-        this.setState({draftEntries: draftEntries});
+        this.props.fetchAccountList();
     }
 
     render() {
         return (
             <div>
-                <UploadFile onDraftEntriesChanged={(draftEntries) => this.setState({draftEntries: draftEntries})} />
+                <UploadFile onSubmit={(file)=>this.props.getDraftFromFile(file)} />
                 <UpdateEntryList
-                    key={this.state.draftEntries}
-                    entries={this.state.draftEntries}
-                    accounts={this.state.accounts}
-                    expandable="true"
-                    handleUpdate={this.handleUpdate} />
-            </div>);
+                    entries={this.props.draftEntries}
+                    accounts={this.props.accounts}
+                    addEntry={this.props.addEntry}
+                />
+            </div>
+        );
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        accounts: state.account.accountList,
+        draftEntries: state.draft.entries
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchAccountList: () => dispatch(fetchAccountList()),
+        getDraftFromFile: (file) => dispatch(getDraftFromFile(file)),
+        addEntry: (entry) => dispatch(addEntry(entry))
+    }
+}
+
+ImportEntries = connect(mapStateToProps, mapDispatchToProps)(ImportEntries);
+
 const import_entries = document.getElementById('import_entries')
 if (import_entries) {
-    ReactDOM.render(<ImportEntries />, import_entries);
+    ReactDOM.render(
+        <Provider store={store}>
+            <ImportEntries />
+        </Provider>,
+        import_entries);
 }
