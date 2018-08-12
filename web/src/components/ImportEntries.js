@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider, connect} from 'react-redux'
+import {connect} from 'react-redux'
 
 import EntryListHeader from './EntryListHeader';
 import SplittableEntry from './SplittableEntry';
@@ -8,7 +8,6 @@ import UploadFile from './UploadFile';
 import {fetchAccountList} from '../actions/account';
 import {getDraftFromFile} from '../actions/draft';
 import {addEntry} from '../actions/entry';
-import {store} from '../store';
 
 const UpdateEntryList = ({accounts, entries, addEntry}) => {
     const totalRefsList = [];
@@ -90,13 +89,5 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-ImportEntries = connect(mapStateToProps, mapDispatchToProps)(ImportEntries);
+export default connect(mapStateToProps, mapDispatchToProps)(ImportEntries);
 
-const import_entries = document.getElementById('import_entries')
-if (import_entries) {
-    ReactDOM.render(
-        <Provider store={store}>
-            <ImportEntries />
-        </Provider>,
-        import_entries);
-}

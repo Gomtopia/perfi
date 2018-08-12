@@ -52,7 +52,7 @@ export function getDraftFromFile(file) {
         const formData = new FormData();
         formData.append('file', file);
 
-        return fetch('api/entries/drafts', {
+        return fetch('/api/entries/drafts', {
             method: 'POST',
             body: formData,
         })

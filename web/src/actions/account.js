@@ -16,7 +16,7 @@ function receiveAccountList(json) {
 export function fetchAccountList() {
     return dispatch => {
         dispatch(requestAccountList())
-        return fetch('api/accounts/')
+        return fetch('/api/accounts/')
             .then(
                 response => response.json(),
                 error => console.log('An error occurred.', error)

@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider, connect} from 'react-redux'
+import {connect} from 'react-redux'
 
 import {fetchAccountList} from '../actions/account';
-import {store} from '../store';
 
 const AccountTableHeader = () => (
     <thead className='thead-bordered'>
@@ -52,13 +51,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-Account = connect(mapStateToProps, mapDispatchToProps)(Account)
-
-const account = document.getElementById('account')
-if (account) {
-    ReactDOM.render(
-        <Provider store={store}>
-            <Account />
-        </Provider>,
-        account);
-}
+export default connect(mapStateToProps, mapDispatchToProps)(Account)

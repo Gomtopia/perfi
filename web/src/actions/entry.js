@@ -32,7 +32,7 @@ function endEdit(entry) {
 export function fetchEntryList() {
     return dispatch => {
         dispatch(requestEntryList())
-        return fetch('api/entries/')
+        return fetch('/api/entries/')
             .then(
                 response => response.json(),
                 error => console.log('An error occurred.', error)
@@ -43,7 +43,7 @@ export function fetchEntryList() {
 
 export function addEntry(entry) {
     return dispatch => {
-        return fetch('api/entries/',
+        return fetch('/api/entries/',
                      {
                          method: 'POST',
                          headers: {
@@ -61,7 +61,7 @@ export function addEntry(entry) {
 
 export function deleteEntry(entry) {
     return dispatch => {
-        return fetch('api/entries/' + entry.id + '/',
+        return fetch('/api/entries/' + entry.id + '/',
                      {
                          method: 'DELETE',
                          headers: {
@@ -79,7 +79,7 @@ export function deleteEntry(entry) {
 
 export function updateEntry(entry) {
     return dispatch => {
-        return fetch('api/entries/' + entry.id + '/',
+        return fetch('/api/entries/' + entry.id + '/',
                      {
                          method: 'PUT',
                          headers: {

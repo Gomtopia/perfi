@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider, connect} from 'react-redux'
+import {connect} from 'react-redux'
 
 import {fetchAccountList} from '../actions/account';
 import {addEntry, fetchEntryList} from '../actions/entry';
-import {store} from '../store';
 import EntryListHeader from './EntryListHeader';
 import EntryListTable from './EntryListTable';
 import EditableEntry from './EditableEntry';
@@ -70,13 +69,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-RootComponent = connect(mapStateToProps, mapDispatchToProps)(RootComponent)
-
-const entry = document.getElementById('entry')
-if (entry) {
-    ReactDOM.render(
-        <Provider store={store}>
-            <RootComponent />
-        </Provider>,
-        entry);
-}
+export default connect(mapStateToProps, mapDispatchToProps)(RootComponent)

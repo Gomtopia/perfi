@@ -46,7 +46,7 @@ class ExpensePieChart extends React.Component {
     }
 }
 
-class Statistics extends React.Component {
+export default class Statistics extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -58,7 +58,7 @@ class Statistics extends React.Component {
     }
 
     componentDidMount() {
-        fetch('api/statistics')
+        fetch('/api/statistics')
             .then(response => response.json())
             .then(responseJson => this.setState({data: responseJson}))
             .catch((error) => console.error(error))
@@ -78,9 +78,4 @@ class Statistics extends React.Component {
             </div>
         );
     }
-}
-
-const stat = document.getElementById('stat');
-if (stat) {
-    ReactDOM.render(<Statistics />, stat);
 }
