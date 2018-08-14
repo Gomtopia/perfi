@@ -16,11 +16,11 @@ function receiveAccountList(json) {
 export function fetchAccountList() {
     return dispatch => {
         dispatch(requestAccountList())
-        return fetch('/api/accounts/')
-            .then(
-                response => response.json(),
-                error => console.log('An error occurred.', error)
-            )
-            .then(json => dispatch(receiveAccountList(json)))
+        return fetch('/api/accounts/', {
+            credentials: 'same-origin',
+        }).then(
+            response => response.json(),
+            error => console.log('An error occurred.', error)
+        ).then(json => dispatch(receiveAccountList(json)))
     }
 }

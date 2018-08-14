@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 class Account(models.Model):
@@ -12,14 +13,19 @@ class Account(models.Model):
         (EXPENSE, 'Expense'),
     )
 
-    name = models.CharField(max_length=128, primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=128)
     account_type = models.CharField(
         max_length = 16,
         choices = ACCOUNT_TYPE_CHOICES,
         default = ASSET,
     )
 
+    class Meta:
+        unique_together = ("user_id", "name")
+
 class Entry(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     debit = models.ForeignKey(Account, related_name='debit_account', on_delete=models.PROTECT)
     credit = models.ForeignKey(Account, related_name='credit_account', on_delete=models.PROTECT)
     description = models.CharField(max_length=256)

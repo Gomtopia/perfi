@@ -4,24 +4,62 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 from django.db.models import F, Sum
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from rest_framework import generics
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import AccountSerializer, EntrySerializer
+from .serializers import AccountSerializer, EntrySerializer, UserSerializer, DraftSerializer
 from .models import Account, Entry
 
-
-class AccountViewSet(viewsets.ModelViewSet):
-    queryset = Account.objects.all()
+class AccountViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     serializer_class = AccountSerializer
 
-class EntryViewSet(viewsets.ModelViewSet):
-    queryset = Entry.objects.all()
+    def get_queryset(self):
+        return Account.objects.filter(user_id=self.request.user.id)
+
+class EntryViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     serializer_class = EntrySerializer
 
+    def create(self, request, *args, **kwargs):
+        request.data['user_id'] = request.user.id
+        return super(EntryViewSet, self).create(request, args, kwargs);
+
+    def update(self, request, *args, **kwargs):
+        request.data['user_id'] = request.user.id
+        return super(EntryViewSet, self).update(request, args, kwargs);
+
+    def get_queryset(self):
+        return Entry.objects.filter(user_id=self.request.user.id)
+
+class UserView(APIView):
+    def get(self, request, format=None):
+        return Response({
+            'is_authenticated': request.user.is_authenticated,
+            'user': UserSerializer(request.user).data
+        })
+
+    def post(self, request, format=None):
+        user = User.objects.create(**request.data)
+        return Response(UserSerializer(user).data)
+
+class LoginView(APIView):
+    def post(self, request, format=None):
+        user = authenticate(request, **request.data)
+        if user is not None:
+            login(request, user)
+            return Response(UserSerializer(user).data)
+        else:
+            return Response('Unable to log in')
+
+class LogoutView(APIView):
+    def get(self, request, format=None):
+        logout(request)
+        return Response('Logout success')
 
 class DraftEntryView(APIView):
     def post(self, request, format=None):
@@ -29,7 +67,7 @@ class DraftEntryView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         sfcu_data = request.data['file'].open('r').read().decode('utf-8')
         draft_entries = self.extract_draft_entries(sfcu_data)
-        serializer = EntrySerializer(draft_entries, many=True)
+        serializer = DraftSerializer(draft_entries, many=True)
         return Response(serializer.data)
 
     def extract_draft_entries(self, sfcu_data):
@@ -51,8 +89,7 @@ class DraftEntryView(APIView):
             draft_entries.append(entry)
         return draft_entries
 
-class StatisticsView(APIView):
-
+class StatisticsView(LoginRequiredMixin, APIView):
     def get(self, request, format=None):
         today = date.today()
 

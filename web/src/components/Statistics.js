@@ -58,7 +58,9 @@ export default class Statistics extends React.Component {
     }
 
     componentDidMount() {
-        fetch('/api/statistics')
+        fetch('/api/statistics/', {
+            credentials: 'same-origin',
+        })
             .then(response => response.json())
             .then(responseJson => this.setState({data: responseJson}))
             .catch((error) => console.error(error))

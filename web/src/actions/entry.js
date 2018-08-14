@@ -1,3 +1,5 @@
+import {getCookie} from '../helper'
+
 export const REQUEST_ENTRY_LIST = 'REQUEST_ENTRY_LIST'
 function requestEntryList() {
     return {
@@ -32,12 +34,12 @@ function endEdit(entry) {
 export function fetchEntryList() {
     return dispatch => {
         dispatch(requestEntryList())
-        return fetch('/api/entries/')
-            .then(
-                response => response.json(),
-                error => console.log('An error occurred.', error)
-            )
-            .then(json => dispatch(receiveEntryList(json)))
+        return fetch('/api/entries/', {
+            credentials: 'same-origin',
+        }).then(
+            response => response.json(),
+            error => console.log('An error occurred.', error)
+        ).then(json => dispatch(receiveEntryList(json)))
     }
 }
 
@@ -49,7 +51,9 @@ export function addEntry(entry) {
                          headers: {
                              Accept: 'application/json',
                              'Content-Type': 'application/json',
+                             'X-CSRFToken': getCookie('csrftoken')
                          },
+                         credentials: 'same-origin',
                          body: JSON.stringify(entry),
                      })
             .then(
@@ -66,8 +70,10 @@ export function deleteEntry(entry) {
                          method: 'DELETE',
                          headers: {
                              Accept: 'application/json',
-                             'Content-Type': 'application/json'
+                             'Content-Type': 'application/json',
+                             'X-CSRFToken': getCookie('csrftoken')
                          },
+                         credentials: 'same-origin',
                          body: JSON.stringify(entry)
                      })
             .then(
@@ -85,7 +91,9 @@ export function updateEntry(entry) {
                          headers: {
                              Accept: 'application/json',
                              'Content-Type': 'application/json',
+                             'X-CSRFToken': getCookie('csrftoken')
                          },
+                         credentials: 'same-origin',
                          body: JSON.stringify(entry)
                      })
             .then(

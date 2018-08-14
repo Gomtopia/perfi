@@ -1,3 +1,5 @@
+import {getCookie} from '../helper'
+
 export const REQUEST_DRAFT = 'REQUEST_DRAFT'
 function requestDraft() {
     return {
@@ -52,8 +54,12 @@ export function getDraftFromFile(file) {
         const formData = new FormData();
         formData.append('file', file);
 
-        return fetch('/api/entries/drafts', {
+        return fetch('/api/drafts/', {
             method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
             body: formData,
         })
             .then(
