@@ -3,6 +3,7 @@ import io
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
+from django.db import IntegrityError
 from django.db.models import F, Sum
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -44,8 +45,12 @@ class UserView(APIView):
         })
 
     def post(self, request, format=None):
-        user = User.objects.create(**request.data)
-        return Response(UserSerializer(user).data)
+        try:
+            user = User.objects.create_user(**request.data)
+            return Response(UserSerializer(user).data)
+        except IntegrityError:
+            return Response({'error': 'username already exists.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
     def post(self, request, format=None):
@@ -54,7 +59,8 @@ class LoginView(APIView):
             login(request, user)
             return Response(UserSerializer(user).data)
         else:
-            return Response('Unable to log in')
+            return Response({'error': 'username or password is wrong'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
     def get(self, request, format=None):

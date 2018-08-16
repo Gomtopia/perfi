@@ -1,6 +1,7 @@
 export const LOGIN_SUCCESSFUL = 'LOGIN_SUCCESSFUL'
 export const LOGIN_FAILED = 'LOGIN_FAILED'
 export const LOGOUT = 'LOGOUT'
+export const CLEAR_DATA = 'CLEAR_DATA'
 
 export function fetchUser() {
     return dispatch => {
@@ -34,11 +35,14 @@ export function login(username, password) {
               })
             .then(
                 res => {
-                    if (res.status === 200) {
-                        dispatch({type: 'LOGIN_SUCCESSFUL', data: res.json()});
-                    } else {
-                        dispatch({type: 'LOGIN_FAILED', data: res.data});
-                    }
+                    const status = res.status;
+                    res.json().then(json => {
+                        if (status === 200) {
+                            dispatch({type: 'LOGIN_SUCCESSFUL', data: json});
+                        } else {
+                            dispatch({type: 'LOGIN_FAILED', data: json});
+                        }
+                    })
                 },
                 error => console.log('An error occurred.', error)
             )
@@ -63,4 +67,8 @@ export function logout() {
                 error => console.log('An error occurred.', error)
             )
     }
+}
+
+export function clearData() {
+    return dispatch => dispatch({type: 'CLEAR_DATA'});
 }

@@ -2,10 +2,11 @@ import React from 'react';
 import {BrowserRouter as Router, Route, Redirect, Link, withRouter} from 'react-router-dom';
 import {connect} from 'react-redux';
 
+import Login from "./Login";
+import Signup from "./Signup";
 import Account from "./Account";
 import Entry from "./Entry";
 import ImportEntries from "./ImportEntries";
-import Login from "./Login";
 import Statistics from "./Statistics";
 import {fetchUser, logout} from "../actions/user";
 
@@ -46,7 +47,7 @@ class App extends React.Component {
                     <PrivateRoute path="/import" component={ImportEntries} />
                     <PrivateRoute path="/account" component={Account} />
                     <Route path="/login" component={Login} />
-                    <Route path="/signin" />
+                    <Route path="/signup" component={Signup} />
                 </div>
             </Router>
         )

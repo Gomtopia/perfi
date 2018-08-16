@@ -1,9 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import {Redirect} from 'react-router-dom';
+import {Redirect, Link} from 'react-router-dom';
 import {connect} from 'react-redux';
 
-import {login} from '../actions/user';
+import {login, clearData} from '../actions/user';
 
 class LoginForm extends React.Component {
     constructor(props) {
@@ -13,15 +12,18 @@ class LoginForm extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
+    componentDidMount() {
+        this.props.clearData();
+    }
+
     handleSubmit(event) {
-        event.preventDefault();
         this.props.login(this.username.current.value, this.password.current.value)
     }
 
     render() {
         const { from } = this.props.location.state || { from: { pathname: "/" } };
 
-        if (this.props.loggedIn) return <Redirect to={from} />
+        if (this.props.loggedIn) return (<Redirect to={from} />)
 
         return (
             <div className="row justify-content-center">
@@ -35,7 +37,11 @@ class LoginForm extends React.Component {
                         <input type="password" className="form-control" name="password" ref={this.password} required/>
                     </div>
                     <div className="text-center">
-                        <button type="button" className="btn btn-primary m-3" onClick={this.handleSubmit}>Login</button>
+                        {this.props.error && <div className="text-danger m-2">{this.props.error}</div>}
+                        <div>
+                            <button type="button" className="btn btn-primary m-3" onClick={this.handleSubmit}>Log In</button>
+                        </div>
+                        <Link to="/signup">Sign up instead?</Link>
                     </div>
                 </div>
             </div>
@@ -45,13 +51,15 @@ class LoginForm extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        loggedIn: state.user.isAuthenticated
+        loggedIn: state.user.isAuthenticated,
+        error: state.user.error
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        login: (username, password) => dispatch(login(username, password))
+        login: (username, password) => dispatch(login(username, password)),
+        clearData: () => dispatch(clearData())
     }
 }
 
