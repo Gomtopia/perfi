@@ -25,7 +25,7 @@ let EditableEntry = ({expand='', entry, accounts, inputRefs, actions}) => {
                     {accountOptions}
                 </select>
             </td>
-            <td key="amount"><input type='number' className='form-control' name='amount' defaultValue={entry.amount} ref={node=>{inputRefs.amount=node}} required/></td>
+            <td key="amount"><input type='number' className='form-control' name='amount' step="0.01" defaultValue={entry.amount} ref={node=>{inputRefs.amount=node}} required/></td>
             <td key="action">
                 {actions}
             </td>
