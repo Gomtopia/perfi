@@ -25,7 +25,7 @@ SECRET_KEY = 'n=-xt)5qhnx+kiifb56_eu^2x8n6cy7+bwuf5yb43d6pdmg6n3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "perfi.bigeye.me"]
 
 
 # Application definition
@@ -121,5 +121,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = '/var/www/perfi/static'
 
 LOGIN_URL = '/login'
