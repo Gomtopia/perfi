@@ -124,7 +124,7 @@ class StatisticsView(LoginRequiredMixin, APIView):
             expense = Entry.objects.filter(debit__account_type='EXPENSE', date__year=basedate.year, date__month=cur_month).aggregate(value=Sum('amount'))
             monthly_data[cur_month]['expense'] = 0 if expense['value'] is None else expense['value']
 
-        recent_1m_expenses = Entry.objects.filter(debit__account_type='EXPENSE', date__gt=basedate-relativedelta(months=1)).values(name=F('debit')).annotate(value=Sum('amount'))
+        recent_1m_expenses = Entry.objects.filter(debit__account_type='EXPENSE', date__gt=basedate-relativedelta(months=1)).values(name=F('debit__name')).annotate(value=Sum('amount'))
         data = {
             'monthly_data': self.tolist(monthly_data),
             'recent_1m_expenses': recent_1m_expenses
