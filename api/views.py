@@ -97,13 +97,17 @@ class DraftEntryView(APIView):
 
 class StatisticsView(LoginRequiredMixin, APIView):
     def get(self, request, format=None):
-        today = date.today()
-
+        # Use the most latest entry to set period to show
+        try:
+            latest_entry = Entry.objects.all().order_by('-date')[0]
+            basedate = latest_entry.date
+        except IndexError:
+            basedate = date.today()
         monthly_data = {}
         for i in range(0, 6):
-            cur_month = today.month-i
+            cur_month = basedate.month-i
             monthly_data[cur_month] = {}
-            entries = Entry.objects.all() if i == 0 else Entry.objects.filter(date__lt=date(today.year, today.month, 1)-relativedelta(months=i-1))
+            entries = Entry.objects.all() if i == 0 else Entry.objects.filter(date__lt=date(basedate.year, basedate.month, 1)-relativedelta(months=i-1))
 
             asset_debit = entries.filter(debit__account_type='ASSET').aggregate(value=Sum('amount'))
             asset_credit = entries.filter(credit__account_type='ASSET').aggregate(value=Sum('amount'))
@@ -115,12 +119,12 @@ class StatisticsView(LoginRequiredMixin, APIView):
             monthly_data[cur_month]['liability'] = 0 if liability_credit['value'] is None else liability_credit['value']
             monthly_data[cur_month]['liability'] -= 0 if liability_debit['value'] is None else liability_debit['value']
 
-            income = Entry.objects.filter(credit__account_type='INCOME', date__year=today.year, date__month=cur_month).aggregate(value=Sum('amount'))
+            income = Entry.objects.filter(credit__account_type='INCOME', date__year=basedate.year, date__month=cur_month).aggregate(value=Sum('amount'))
             monthly_data[cur_month]['income'] = 0 if income['value'] is None else income['value']
-            expense = Entry.objects.filter(debit__account_type='EXPENSE', date__year=today.year, date__month=cur_month).aggregate(value=Sum('amount'))
+            expense = Entry.objects.filter(debit__account_type='EXPENSE', date__year=basedate.year, date__month=cur_month).aggregate(value=Sum('amount'))
             monthly_data[cur_month]['expense'] = 0 if expense['value'] is None else expense['value']
 
-        recent_1m_expenses = Entry.objects.filter(debit__account_type='EXPENSE', date__gt=today-relativedelta(months=1)).values(name=F('debit')).annotate(value=Sum('amount'))
+        recent_1m_expenses = Entry.objects.filter(debit__account_type='EXPENSE', date__gt=basedate-relativedelta(months=1)).values(name=F('debit')).annotate(value=Sum('amount'))
         data = {
             'monthly_data': self.tolist(monthly_data),
             'recent_1m_expenses': recent_1m_expenses
