@@ -35,7 +35,7 @@ class EntryViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
         return super(EntryViewSet, self).update(request, args, kwargs);
 
     def get_queryset(self):
-        return Entry.objects.filter(user_id=self.request.user.id)
+        return Entry.objects.filter(user_id=self.request.user.id).order_by('-date')
 
 class UserView(APIView):
     def get(self, request, format=None):

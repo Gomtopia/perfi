@@ -17,27 +17,32 @@ export default function entry(
             })
         case RECEIVE_ENTRY_LIST: {
             const entries = {}
-            action.entryList.map((entry) => {
-                entries[entry.id] = entry
+            const entriesIdToIndex = {}
+            action.entryList.map((entry, index) => {
+                entries[index] = entry;
+                entriesIdToIndex[entry.id] = index;
             })
 
             return Object.assign({}, state, {
                 isFetching: false,
-                entries: entries
+                entries: entries,
+                entriesIdToIndex: entriesIdToIndex
             })
         }
         case START_EDIT:
             return Object.assign({}, state, {
                 entries: Object.assign({}, state.entries, {
-                    [action.id]: Object.assign({}, state.entries[action.id], {
-                        isEditing: true
-                    })
+                    [state.entriesIdToIndex[action.id]]: Object.assign(
+                        {},
+                        state.entries[state.entriesIdToIndex[action.id]],
+                        {isEditing: true}
+                    )
                 })
             });
         case END_EDIT:
             return Object.assign({}, state, {
                 entries: Object.assign({}, state.entries, {
-                    [action.entry.id]: action.entry
+                    [state.entriesIdToIndex[action.entry.id]]: action.entry
                 })
             });
         default:
